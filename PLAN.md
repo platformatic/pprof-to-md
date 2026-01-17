@@ -500,8 +500,8 @@ No build step required - TypeScript files run directly.
 2. ✅ **Phase 2**: Implement analyzer with call tree construction
 3. ✅ **Phase 3**: Implement all three formatters (Markdown output)
 4. ✅ **Phase 4**: Add source resolution capability
-5. ⬜ **Phase 5**: Execute testing plan and document results
-6. ⬜ **Phase 6**: Refine formats based on test results
+5. ✅ **Phase 5**: Execute testing plan and document results (see [TESTING.md](./TESTING.md))
+6. ✅ **Phase 6**: Adaptive format set as default based on test results
 
 ---
 

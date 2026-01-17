@@ -13,7 +13,7 @@ USAGE:
   pprof-to-llm [options] <profile.pb[.gz]>
 
 OPTIONS:
-  -f, --format <level>    Output format: summary, detailed, adaptive (default: summary)
+  -f, --format <level>    Output format: summary, detailed, adaptive (default: adaptive)
   -t, --type <type>       Profile type: cpu, heap, auto (default: auto)
   -o, --output <file>     Output file (default: stdout)
   -s, --source-dir <dir>  Source directory for code context
@@ -44,7 +44,7 @@ FORMAT LEVELS:
 function main(): void {
   const { values, positionals } = parseArgs({
     options: {
-      format: { type: 'string', short: 'f', default: 'summary' },
+      format: { type: 'string', short: 'f', default: 'adaptive' },
       type: { type: 'string', short: 't', default: 'auto' },
       output: { type: 'string', short: 'o' },
       'source-dir': { type: 'string', short: 's' },
