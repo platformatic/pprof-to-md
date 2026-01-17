@@ -26,7 +26,7 @@ A tool to convert pprof profiling data into an LLM-friendly textual format for p
 **A:** Only sync stacks will be collected, no async stack handling needed
 
 ### Implementation Language
-**Node.js** for the converter tool
+**TypeScript** with Node.js type stripping (native support in Node 22+/24)
 
 ### Libraries
 - **Collection:** `@datadog/pprof`
@@ -419,24 +419,26 @@ What specific optimizations would you recommend?
 ```
 pprof-to-llm/
 ├── package.json
+├── tsconfig.json
 ├── README.md
 ├── PLAN.md (this file)
 ├── src/
-│   ├── index.js           # CLI entry point
-│   ├── parser.js          # pprof parsing via pprof-format
-│   ├── analyzer.js        # Profile analysis logic
+│   ├── cli.ts             # CLI entry point
+│   ├── index.ts           # Library exports
+│   ├── parser.ts          # pprof parsing via pprof-format
+│   ├── analyzer.ts        # Profile analysis logic
 │   ├── formatter/
-│   │   ├── index.js       # Formatter factory
-│   │   ├── summary.js     # Summary format
-│   │   ├── detailed.js    # Detailed format
-│   │   └── adaptive.js    # Adaptive format
-│   ├── source-resolver.js # Source code lookup
-│   └── utils.js           # Shared utilities
+│   │   ├── index.ts       # Formatter factory
+│   │   ├── summary.ts     # Summary format
+│   │   ├── detailed.ts    # Detailed format
+│   │   └── adaptive.ts    # Adaptive format
+│   ├── source-resolver.ts # Source code lookup
+│   └── types.ts           # Shared type definitions
 ├── test/
 │   ├── profiles/          # Test profile files
-│   ├── parser.test.js
-│   ├── analyzer.test.js
-│   └── formatter.test.js
+│   ├── parser.test.ts
+│   ├── analyzer.test.ts
+│   └── formatter.test.ts
 └── examples/
     ├── sample-cpu.pb.gz
     └── sample-heap.pb.gz
@@ -452,15 +454,23 @@ pprof-to-llm/
     "pprof-format": "^2.1.0"
   },
   "devDependencies": {
-    "@datadog/pprof": "^5.0.0"
+    "@datadog/pprof": "^5.4.1",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
   }
 }
 ```
 
 - **pprof-format** - Parse pprof protobuf files
 - **@datadog/pprof** - Generate test profiles (dev dependency)
+- **typescript** - Type checking only (runtime uses Node.js native type stripping)
 
 Use Node.js built-in modules where possible (zlib, fs, path).
+
+### TypeScript Configuration
+
+Uses Node.js native type stripping (`--experimental-strip-types` in Node 22, default in Node 24+).
+No build step required - TypeScript files run directly.
 
 ---
 

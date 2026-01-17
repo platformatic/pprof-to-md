@@ -1,0 +1,34 @@
+{
+  "name": "pprof-to-llm",
+  "version": "1.0.0",
+  "description": "Convert pprof profiling data into LLM-friendly textual format for performance analysis",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "pprof-to-llm": "./src/cli.ts"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "generate-profiles": "node test/generate-profiles.ts"
+  },
+  "keywords": [
+    "pprof",
+    "profiling",
+    "performance",
+    "llm",
+    "analysis"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "pprof-format": "^2.1.0"
+  },
+  "devDependencies": {
+    "@datadog/pprof": "^5.4.1",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
