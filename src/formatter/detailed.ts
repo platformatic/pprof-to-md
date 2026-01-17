@@ -10,7 +10,7 @@ import type {
 const HOTSPOT_THRESHOLD = 5 // Mark as hotspot if self% >= 5
 
 /**
- * Format analysis results in detailed format
+ * Format analysis results in detailed format (Markdown)
  * Full context with annotated call trees
  */
 export function formatDetailed(
@@ -23,8 +23,9 @@ export function formatDetailed(
   const lines: string[] = []
 
   // Header
-  lines.push(`=== PPROF ANALYSIS: ${profileType.toUpperCase()} ===`)
-  lines.push(`Profile: ${profileName}`)
+  lines.push(`# PPROF Analysis: ${profileType.toUpperCase()}`)
+  lines.push('')
+  lines.push(`**Profile:** \`${profileName}\``)
 
   // Duration and sample info
   const durationNanos = Number(analysis.durationNanos)
@@ -33,35 +34,35 @@ export function formatDetailed(
       ? `${(durationNanos / 1e9).toFixed(1)}s`
       : 'N/A'
 
-  lines.push(
-    `Duration: ${durationSec} | Samples: ${analysis.totalSamples.toLocaleString()} | Sample Rate: ${formatSampleRate(analysis)}`
-  )
+  lines.push(`**Duration:** ${durationSec} | **Samples:** ${analysis.totalSamples.toLocaleString()} | **Sample Rate:** ${formatSampleRate(analysis)}`)
 
   if (analysis.periodType) {
-    lines.push(
-      `Collected: ${new Date().toISOString().split('T')[0]}`
-    )
+    lines.push(`**Collected:** ${new Date().toISOString().split('T')[0]}`)
   }
   lines.push('')
 
   // Metadata section
-  lines.push('## METADATA')
-  lines.push(`- Sample Type: ${analysis.sampleType.type} (${analysis.sampleType.unit})`)
-  lines.push(`- Total Value: ${formatValue(analysis.totalValue, analysis.sampleType.unit)}`)
+  lines.push('## Metadata')
+  lines.push('')
+  lines.push(`- **Sample Type:** ${analysis.sampleType.type} (${analysis.sampleType.unit})`)
+  lines.push(`- **Total Value:** ${formatValue(analysis.totalValue, analysis.sampleType.unit)}`)
   if (Number(analysis.period) > 0) {
-    lines.push(`- Sample Period: ${formatValue(analysis.period, analysis.periodType?.unit ?? '')}`)
+    lines.push(`- **Sample Period:** ${formatValue(analysis.period, analysis.periodType?.unit ?? '')}`)
   }
   lines.push('')
 
   // Call tree section
-  lines.push('## CALL TREE (annotated flame graph)')
-  lines.push('Legend: [self% | cum%] function @ location')
+  lines.push('## Call Tree (annotated flame graph)')
   lines.push('')
+  lines.push('> Legend: `[self% | cum%] function @ location`')
+  lines.push('')
+  lines.push('```')
   lines.push(formatCallTree(analysis.callTree, '', true, new Set()))
+  lines.push('```')
   lines.push('')
 
   // Function details section
-  lines.push('## FUNCTION DETAILS')
+  lines.push('## Function Details')
   lines.push('')
   const topHotspots = analysis.hotspots.slice(0, maxHotspots)
   for (const hotspot of topHotspots) {
@@ -70,7 +71,7 @@ export function formatDetailed(
   }
 
   // Hotspot analysis section
-  lines.push('## HOTSPOT ANALYSIS')
+  lines.push('## Hotspot Analysis')
   lines.push('')
   for (let i = 0; i < Math.min(topHotspots.length, 5); i++) {
     const hotspot = topHotspots[i]
@@ -82,8 +83,9 @@ export function formatDetailed(
 }
 
 function formatSampleRate(analysis: AnalysisResult): string {
-  if (analysis.durationNanos > 0n && analysis.totalSamples > 0) {
-    const durationSec = Number(analysis.durationNanos) / 1e9
+  const durationNanos = Number(analysis.durationNanos)
+  if (durationNanos > 0 && analysis.totalSamples > 0) {
+    const durationSec = durationNanos / 1e9
     const rate = analysis.totalSamples / durationSec
     if (rate >= 1000) {
       return `${(rate / 1000).toFixed(1)}kHz`
@@ -169,7 +171,8 @@ function formatFunctionDetail(
     ? '<native>'
     : `${hotspot.filename}:${hotspot.line}`
 
-  lines.push(`### ${hotspot.name} @ ${location}`)
+  lines.push(`### \`${hotspot.name}\` @ \`${location}\``)
+  lines.push('')
 
   const selfFormatted = formatValue(
     hotspot.selfValue,
@@ -180,26 +183,24 @@ function formatFunctionDetail(
     analysis.sampleType.unit
   )
 
-  lines.push(
-    `Samples: ${hotspot.sampleCount.toLocaleString()} (${hotspot.selfPercent.toFixed(1)}% self) | Cumulative: ${cumFormatted} (${hotspot.cumulativePercent.toFixed(1)}%)`
-  )
+  lines.push(`**Samples:** ${hotspot.sampleCount.toLocaleString()} (${hotspot.selfPercent.toFixed(1)}% self) | **Cumulative:** ${cumFormatted} (${hotspot.cumulativePercent.toFixed(1)}%)`)
 
   if (hotspot.callers.length > 0) {
     const callerStr =
       hotspot.callers.length <= 3
-        ? hotspot.callers.join(', ')
-        : hotspot.callers.slice(0, 3).join(', ') +
+        ? hotspot.callers.map(c => `\`${c}\``).join(', ')
+        : hotspot.callers.slice(0, 3).map(c => `\`${c}\``).join(', ') +
           ` (+${hotspot.callers.length - 3} more)`
-    lines.push(`Callers: ${callerStr}`)
+    lines.push(`**Callers:** ${callerStr}`)
   }
 
   if (hotspot.callees.length > 0) {
     const calleeStr =
       hotspot.callees.length <= 3
-        ? hotspot.callees.join(', ')
-        : hotspot.callees.slice(0, 3).join(', ') +
+        ? hotspot.callees.map(c => `\`${c}\``).join(', ')
+        : hotspot.callees.slice(0, 3).map(c => `\`${c}\``).join(', ') +
           ` (+${hotspot.callees.length - 3} more)`
-    lines.push(`Callees: ${calleeStr}`)
+    lines.push(`**Callees:** ${calleeStr}`)
   }
 
   return lines.join('\n')
@@ -209,20 +210,22 @@ function formatHotspotAnalysis(index: number, hotspot: Hotspot): string {
   const lines: string[] = []
   const isNative = !hotspot.filename || hotspot.filename === ''
 
-  lines.push(`### Hotspot #${index}: ${hotspot.name} (${hotspot.selfPercent.toFixed(1)}%)`)
-  lines.push(`Type: ${isNative ? 'Native function' : 'Application code'}`)
+  lines.push(`### Hotspot #${index}: \`${hotspot.name}\` (${hotspot.selfPercent.toFixed(1)}%)`)
+  lines.push('')
+  lines.push(`**Type:** ${isNative ? 'Native function' : 'Application code'}`)
 
   if (!isNative) {
-    lines.push(`Location: ${hotspot.filename}:${hotspot.line}`)
+    lines.push(`**Location:** \`${hotspot.filename}:${hotspot.line}\``)
   }
 
   // Add contextual hints based on function name patterns
   const hints = generateHints(hotspot)
   if (hints.length > 0) {
+    lines.push('')
     if (isNative) {
-      lines.push('Mitigation strategies:')
+      lines.push('**Mitigation strategies:**')
     } else {
-      lines.push('Investigation hints:')
+      lines.push('**Investigation hints:**')
     }
     for (const hint of hints) {
       lines.push(`- ${hint}`)

@@ -54,200 +54,220 @@ Inspired by **Brendan Gregg's** performance analysis principles:
 
 Compact, high-signal format for quick analysis. Best for initial triage.
 
-```
-=== PPROF ANALYSIS: CPU ===
-Profile: api-server-cpu.pprof
-Duration: 30s | Samples: 45,231 | Sample Rate: 100Hz
+```markdown
+# PPROF Analysis: CPU
 
-## TOP HOTSPOTS (by self-time)
-┌─────┬──────────────────────────────────────────┬───────┬───────┬─────────────────────┐
-│ Rank│ Function                                 │ Self% │ Cum%  │ Location            │
-├─────┼──────────────────────────────────────────┼───────┼───────┼─────────────────────┤
-│ 1   │ JSON.parse                               │ 23.4% │ 23.4% │ <native>            │
-│ 2   │ processRequest                           │ 15.2% │ 67.8% │ src/handler.js:142  │
-│ 3   │ RegExp.exec                              │ 12.1% │ 12.1% │ <native>            │
-│ 4   │ validateSchema                           │ 8.7%  │ 31.2% │ src/validate.js:89  │
-│ 5   │ Buffer.toString                          │ 6.3%  │ 6.3%  │ <native>            │
-└─────┴──────────────────────────────────────────┴───────┴───────┴─────────────────────┘
+**Profile:** `api-server-cpu.pprof`
+**Duration:** 30s | **Samples:** 45,231 | **Type:** samples (count)
 
-## CRITICAL PATHS (top cumulative chains)
-1. [67.8%] main → handleHTTP → processRequest → parseBody → JSON.parse
-2. [31.2%] main → handleHTTP → processRequest → validateSchema → checkField
-3. [18.4%] main → handleHTTP → processRequest → queryDB → pg.query
+## Top Hotspots (by self-time)
 
-## KEY OBSERVATIONS
-- Native JSON parsing dominates (23.4% self-time)
-- Validation overhead is significant (31.2% cumulative)
-- 3 distinct hot paths converge at processRequest
+| Rank | Function | Self% | Cum% | Location |
+|------|----------|-------|------|----------|
+| 1 | `JSON.parse` | 23.4% | 23.4% | `<native>` |
+| 2 | `processRequest` | 15.2% | 67.8% | `handler.js:142` |
+| 3 | `RegExp.exec` | 12.1% | 12.1% | `<native>` |
+| 4 | `validateSchema` | 8.7% | 31.2% | `validate.js:89` |
+| 5 | `Buffer.toString` | 6.3% | 6.3% | `<native>` |
+
+## Critical Paths (top cumulative chains)
+
+1. **[67.8%]** `main` → `handleHTTP` → `processRequest` → `parseBody` → `JSON.parse`
+2. **[31.2%]** `main` → `handleHTTP` → `processRequest` → `validateSchema` → `checkField`
+3. **[18.4%]** `main` → `handleHTTP` → `processRequest` → `queryDB` → `pg.query`
+
+## Key Observations
+
+- Native `JSON.parse` dominates (**23.4%** self-time)
+- Validation overhead is significant (**31.2%** cumulative)
+- 3 distinct hot paths converge at `processRequest`
 ```
 
 ### Level 2: Detailed Format (`--format=detailed`)
 
 Full context with annotated call trees. Best for deep analysis.
 
+```markdown
+# PPROF Analysis: CPU
+
+**Profile:** `api-server-cpu.pprof`
+**Duration:** 30s | **Samples:** 45,231 | **Sample Rate:** 100Hz
+**Collected:** 2024-01-15
+
+## Metadata
+
+- **Sample Type:** samples (count)
+- **Total Value:** 45,231 samples
+
+## Call Tree (annotated flame graph)
+
+> Legend: `[self% | cum%] function @ location`
+
 ```
-=== PPROF ANALYSIS: CPU ===
-Profile: api-server-cpu.pprof
-Duration: 30s | Samples: 45,231 | Sample Rate: 100Hz
-Collected: 2024-01-15T14:32:00Z
+[  0.1% | 100.0%] (root) @ <native>
+└── [  0.1% |  99.8%] main @ src/index.js:1
+    └── [  0.2% |  99.5%] startServer @ src/server.js:45
+        └── [  0.1% |  98.2%] handleHTTP @ src/server.js:78
+            ├── [ 15.2% |  67.8%] processRequest @ src/handler.js:142  ◀ HOTSPOT
+            │   ├── [  1.2% |  24.6%] parseBody @ src/parser.js:23
+            │   │   └── [ 23.4% |  23.4%] JSON.parse @ <native>  ◀ HOTSPOT
+            │   ├── [  8.7% |  31.2%] validateSchema @ src/validate.js:89  ◀ HOTSPOT
+            │   │   └── [ 12.1% |  12.1%] RegExp.exec @ <native>  ◀ HOTSPOT
+            │   └── [  0.8% |  18.4%] queryDB @ src/db.js:67
+            └── [  0.3% |  12.1%] sendResponse @ src/server.js:134
+                └── [  6.3% |   6.3%] Buffer.toString @ <native>
+```
 
-## METADATA
-- Node.js v20.10.0
-- V8 11.3.244.8
-- Platform: linux x64
+## Function Details
 
-## CALL TREE (annotated flame graph)
-Legend: [self% | cum%] function @ location
+### `processRequest` @ `src/handler.js:142`
 
-[0.1% | 100%] (root)
-└── [0.1% | 99.8%] main @ src/index.js:1
-    └── [0.2% | 99.5%] startServer @ src/server.js:45
-        └── [0.1% | 98.2%] handleHTTP @ src/server.js:78
-            ├── [15.2% | 67.8%] processRequest @ src/handler.js:142    ◀ HOTSPOT
-            │   ├── [1.2% | 24.6%] parseBody @ src/parser.js:23
-            │   │   └── [23.4% | 23.4%] JSON.parse @ <native>          ◀ HOTSPOT
-            │   ├── [8.7% | 31.2%] validateSchema @ src/validate.js:89 ◀ HOTSPOT
-            │   │   ├── [12.1% | 12.1%] RegExp.exec @ <native>         ◀ HOTSPOT
-            │   │   └── [2.3% | 10.4%] checkField @ src/validate.js:156
-            │   └── [0.8% | 18.4%] queryDB @ src/db.js:67
-            │       └── [4.2% | 17.6%] pg.query @ node_modules/pg/...
-            └── [0.3% | 12.1%] sendResponse @ src/server.js:134
-                └── [6.3% | 6.3%] Buffer.toString @ <native>
+**Samples:** 6,878 (15.2% self) | **Cumulative:** 30,678 (67.8%)
+**Callers:** `handleHTTP`
+**Callees:** `parseBody`, `validateSchema`, `queryDB`
 
-## FUNCTION DETAILS
+### `JSON.parse` @ `<native>`
 
-### processRequest @ src/handler.js:142
-Samples: 6,878 (15.2% self) | Cumulative: 30,678 (67.8%)
-Callers: handleHTTP (100%)
-Callees: parseBody (36%), validateSchema (46%), queryDB (27%)
+**Samples:** 10,584 (23.4% self) | **Cumulative:** 10,584 (23.4%)
+**Callers:** `parseBody`
+**Callees:** (none - leaf function)
 
-This function is the main request processing entry point.
-High self-time suggests work done directly in this function.
+## Hotspot Analysis
 
-### JSON.parse @ <native>
-Samples: 10,584 (23.4% self) | Cumulative: 10,584 (23.4%)
-Callers: parseBody (100%)
-Callees: none (leaf function)
+### Hotspot #1: `JSON.parse` (23.4%)
 
-Native V8 JSON parser. High cost suggests:
+**Type:** Native function
+
+**Mitigation strategies:**
 - Large JSON payloads being parsed
-- Frequent parsing operations
 - Consider streaming parser for large bodies
-
-## HOTSPOT ANALYSIS
-
-### Hotspot #1: JSON.parse (23.4%)
-Type: Native function (cannot optimize directly)
-Mitigation strategies:
-- Reduce payload sizes
 - Cache parsed results if payloads repeat
-- Consider binary protocol (protobuf, msgpack)
-- Stream large payloads instead of buffering
 
-### Hotspot #2: processRequest (15.2% self)
-Type: Application code
-Location: src/handler.js:142
-Requires source inspection to determine cause.
+### Hotspot #2: `processRequest` (15.2%)
 
-### Hotspot #3: RegExp.exec (12.1%)
-Type: Native function
-Called from: validateSchema
-Mitigation strategies:
+**Type:** Application code
+**Location:** `src/handler.js:142`
+
+**Investigation hints:**
+- Review function implementation for optimization opportunities
+- Check for unnecessary work or redundant calculations
+
+### Hotspot #3: `RegExp.exec` (12.1%)
+
+**Type:** Native function
+
+**Mitigation strategies:**
 - Pre-compile RegExp patterns (move outside hot path)
 - Simplify patterns if possible
-- Consider string methods (.includes, .startsWith) for simple checks
+- Consider string methods for simple checks
 ```
 
 ### Level 3: Adaptive Format (`--format=adaptive`)
 
-Starts with summary, provides structured drill-down markers.
+Starts with summary, provides structured drill-down sections with anchor links.
 
-```
-=== PPROF ANALYSIS: CPU ===
-Profile: api-server-cpu.pprof
-Duration: 30s | Samples: 45,231
+```markdown
+# PPROF Analysis: CPU
 
-## EXECUTIVE SUMMARY
-Primary bottleneck: JSON parsing (23.4% of CPU)
-Secondary bottleneck: Schema validation (31.2% cumulative)
-Optimization potential: HIGH (>50% in application code)
+**Profile:** `api-server-cpu.pprof`
+**Duration:** 30s | **Samples:** 45,231
 
-## TOP 5 HOTSPOTS
-1. JSON.parse (23.4%) [DRILL:json-parse]
-2. processRequest (15.2%) [DRILL:process-request]
-3. RegExp.exec (12.1%) [DRILL:regexp-exec]
-4. validateSchema (8.7%) [DRILL:validate-schema]
-5. Buffer.toString (6.3%) [DRILL:buffer-tostring]
+## Executive Summary
 
-## DRILL-DOWN SECTIONS
+- **Primary bottleneck:** `JSON.parse` (**23.4%** of CPU)
+- **Secondary bottleneck:** `validateSchema` (**8.7%**)
+- **Optimization potential:** 🟢 HIGH (67% in application code)
 
-[SECTION:json-parse]
-### JSON.parse Analysis
-Full path: handleHTTP → processRequest → parseBody → JSON.parse
-Self-time: 23.4% (10,584 samples)
-Nature: Native V8 function
+## Top Hotspots
 
-Call context:
-- Always called from parseBody()
-- Processes incoming request bodies
-- No caching observed in call pattern
+1. `JSON.parse` (**23.4%**) → [Details](#json-parse)
+2. `processRequest` (**15.2%**) → [Details](#processrequest)
+3. `RegExp.exec` (**12.1%**) → [Details](#regexp-exec)
+4. `validateSchema` (**8.7%**) → [Details](#validateschema)
+5. `Buffer.toString` (**6.3%**) → [Details](#buffer-tostring)
 
-Related source:
+## Critical Paths
+
+1. **[67.8%]** `handleHTTP` → `processRequest` → `parseBody` → `JSON.parse`
+2. **[31.2%]** `handleHTTP` → `processRequest` → `validateSchema`
+
+---
+
+## Detailed Analysis
+
+<a id="json-parse"></a>
+
+### `JSON.parse`
+
+**Call path:** `handleHTTP` → `processRequest` → `parseBody` → `JSON.parse`
+**Self-time:** 23.4% (10,584 samples)
+**Type:** Native V8/Node.js function
+
+**Call context:**
+- Called from `parseBody`
+
+**Source:**
+
 ```javascript
 // src/parser.js:23-28
 async function parseBody(req) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
   const body = Buffer.concat(chunks).toString('utf8');
-  return JSON.parse(body);  // ← 23.4% of total CPU
+  return JSON.parse(body);  // ← HOT
 }
 ```
-[/SECTION:json-parse]
 
-[SECTION:process-request]
-### processRequest Analysis
-...
-[/SECTION:process-request]
+**Insights:**
+- Always called from `parseBody` - consider inlining or specialization
+- JSON operations suggest data transformation overhead
+
+<a id="processrequest"></a>
+
+### `processRequest`
+
+**Call path:** `handleHTTP` → `processRequest`
+**Self-time:** 15.2% (6,878 samples)
+**Type:** Application code
+
+**Call context:**
+- Called from `handleHTTP`
+
+**Insights:**
+- High cumulative time relative to self-time suggests this is a coordinator function
+- Callees account for most time: `parseBody`, `validateSchema`, `queryDB`
 ```
 
 ---
 
 ## Memory Profile Format
 
-```
-=== PPROF ANALYSIS: HEAP ===
-Profile: api-server-heap.pprof
-Snapshot: 2024-01-15T14:35:00Z
+```markdown
+# PPROF Analysis: HEAP
 
-## HEAP SUMMARY
-Total Allocated: 847.3 MB
-Total Objects: 2,847,231
-Top Growth: +234 MB in last 60s
+**Profile:** `api-server-heap.pprof`
+**Duration:** N/A | **Samples:** 2,847,231 | **Type:** alloc_space (bytes)
 
-## TOP ALLOCATORS (by size)
-┌─────┬──────────────────────────────────────────┬──────────┬─────────┬─────────────────────┐
-│ Rank│ Function                                 │ Size     │ Objects │ Location            │
-├─────┼──────────────────────────────────────────┼──────────┼─────────┼─────────────────────┤
-│ 1   │ JSON.parse                               │ 312.4 MB │ 892,341 │ <native>            │
-│ 2   │ Buffer.from                              │ 156.2 MB │ 45,123  │ <native>            │
-│ 3   │ createResponse                           │ 89.7 MB  │ 234,567 │ src/response.js:34  │
-│ 4   │ clone                                    │ 67.3 MB  │ 445,892 │ node_modules/lodash │
-│ 5   │ buildQuery                               │ 45.1 MB  │ 123,456 │ src/db.js:89        │
-└─────┴──────────────────────────────────────────┴──────────┴─────────┴─────────────────────┘
+## Top Hotspots (by self-time)
 
-## ALLOCATION PATTERNS
+| Rank | Function | Self% | Cum% | Location |
+|------|----------|-------|------|----------|
+| 1 | `JSON.parse` | 36.9% | 36.9% | `<native>` |
+| 2 | `Buffer.from` | 18.4% | 18.4% | `<native>` |
+| 3 | `createResponse` | 10.6% | 10.6% | `response.js:34` |
+| 4 | `clone` | 7.9% | 7.9% | `node_modules/lodash/clone.js:12` |
+| 5 | `buildQuery` | 5.3% | 5.3% | `db.js:89` |
 
-### High Object Count (potential GC pressure)
-- clone: 445,892 objects (avg 151 bytes each) - consider in-place mutation
-- anonymous closures: 234,123 objects - check for closure leaks
+## Critical Paths (top cumulative chains)
 
-### Large Allocations (potential memory pressure)
-- JSON.parse: 312.4 MB - large payloads or many small parses accumulating
-- Buffer.from: 156.2 MB - buffer pooling may help
+1. **[67.5%]** `handleHTTP` → `processRequest` → `parseBody` → `JSON.parse`
+2. **[23.8%]** `handleHTTP` → `sendResponse` → `createResponse` → `Buffer.from`
 
-## RETENTION PATHS (for potential leaks)
-1. global → cache → Map(45,000 entries) → parsed objects
-2. global → eventEmitter → listeners[] → closures → captured scope
+## Key Observations
+
+- Native `JSON.parse` dominates (**36.9%** self-time)
+- Application code accounts for **23.8%** of self-time (optimizable)
+- `clone` has highest allocation count (potential GC pressure)
 ```
 
 ---
@@ -474,14 +494,14 @@ No build step required - TypeScript files run directly.
 
 ---
 
-## Next Steps
+## Implementation Status
 
-1. **Phase 1**: Implement parser using `pprof-format`
-2. **Phase 2**: Implement analyzer with call tree construction
-3. **Phase 3**: Implement all three formatters
-4. **Phase 4**: Add source resolution capability
-5. **Phase 5**: Execute testing plan and document results
-6. **Phase 6**: Refine formats based on test results
+1. ✅ **Phase 1**: Implement parser using `pprof-format`
+2. ✅ **Phase 2**: Implement analyzer with call tree construction
+3. ✅ **Phase 3**: Implement all three formatters (Markdown output)
+4. ✅ **Phase 4**: Add source resolution capability
+5. ⬜ **Phase 5**: Execute testing plan and document results
+6. ⬜ **Phase 6**: Refine formats based on test results
 
 ---
 

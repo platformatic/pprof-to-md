@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const profilesDir = join(__dirname, 'profiles')
 
 describe('formatter', () => {
-  test('formatSummary produces expected structure', async () => {
+  test('formatSummary produces expected markdown structure', async () => {
     const cpuProfile = join(profilesDir, 'cpu-test.pb.gz')
 
     if (!existsSync(cpuProfile)) {
@@ -29,12 +29,12 @@ describe('formatter', () => {
     const analysis = analyzeProfile(profile)
     const output = formatSummary(analysis, profileType, { profileName: 'test.pb' })
 
-    assert.ok(output.includes('=== PPROF ANALYSIS:'), 'Should have header')
-    assert.ok(output.includes('## TOP HOTSPOTS'), 'Should have hotspots section')
-    assert.ok(output.includes('## KEY OBSERVATIONS'), 'Should have observations')
+    assert.ok(output.includes('# PPROF Analysis:'), 'Should have markdown header')
+    assert.ok(output.includes('## Top Hotspots'), 'Should have hotspots section')
+    assert.ok(output.includes('## Key Observations'), 'Should have observations')
   })
 
-  test('formatDetailed produces expected structure', async () => {
+  test('formatDetailed produces expected markdown structure', async () => {
     const cpuProfile = join(profilesDir, 'cpu-test.pb.gz')
 
     if (!existsSync(cpuProfile)) {
@@ -47,14 +47,14 @@ describe('formatter', () => {
     const analysis = analyzeProfile(profile)
     const output = formatDetailed(analysis, profileType)
 
-    assert.ok(output.includes('=== PPROF ANALYSIS:'), 'Should have header')
-    assert.ok(output.includes('## METADATA'), 'Should have metadata section')
-    assert.ok(output.includes('## CALL TREE'), 'Should have call tree')
-    assert.ok(output.includes('## FUNCTION DETAILS'), 'Should have function details')
-    assert.ok(output.includes('## HOTSPOT ANALYSIS'), 'Should have hotspot analysis')
+    assert.ok(output.includes('# PPROF Analysis:'), 'Should have markdown header')
+    assert.ok(output.includes('## Metadata'), 'Should have metadata section')
+    assert.ok(output.includes('## Call Tree'), 'Should have call tree')
+    assert.ok(output.includes('## Function Details'), 'Should have function details')
+    assert.ok(output.includes('## Hotspot Analysis'), 'Should have hotspot analysis')
   })
 
-  test('formatAdaptive produces expected structure', async () => {
+  test('formatAdaptive produces expected markdown structure', async () => {
     const cpuProfile = join(profilesDir, 'cpu-test.pb.gz')
 
     if (!existsSync(cpuProfile)) {
@@ -67,11 +67,11 @@ describe('formatter', () => {
     const analysis = analyzeProfile(profile)
     const output = formatAdaptive(analysis, profileType)
 
-    assert.ok(output.includes('=== PPROF ANALYSIS:'), 'Should have header')
-    assert.ok(output.includes('## EXECUTIVE SUMMARY'), 'Should have executive summary')
-    assert.ok(output.includes('## TOP HOTSPOTS'), 'Should have hotspots list')
-    assert.ok(output.includes('[DRILL:'), 'Should have drill-down markers')
-    assert.ok(output.includes('[SECTION:'), 'Should have drill-down sections')
+    assert.ok(output.includes('# PPROF Analysis:'), 'Should have markdown header')
+    assert.ok(output.includes('## Executive Summary'), 'Should have executive summary')
+    assert.ok(output.includes('## Top Hotspots'), 'Should have hotspots list')
+    assert.ok(output.includes('[Details](#'), 'Should have drill-down links')
+    assert.ok(output.includes('<a id="'), 'Should have anchor tags for drill-down')
   })
 
   test('format function routes to correct formatter', async () => {
@@ -90,12 +90,12 @@ describe('formatter', () => {
     const detailedOutput = format(analysis, profileType, 'detailed')
     const adaptiveOutput = format(analysis, profileType, 'adaptive')
 
-    assert.ok(summaryOutput.includes('TOP HOTSPOTS'), 'Summary should have hotspots table')
-    assert.ok(detailedOutput.includes('CALL TREE'), 'Detailed should have call tree')
-    assert.ok(adaptiveOutput.includes('EXECUTIVE SUMMARY'), 'Adaptive should have executive summary')
+    assert.ok(summaryOutput.includes('Top Hotspots'), 'Summary should have hotspots table')
+    assert.ok(detailedOutput.includes('Call Tree'), 'Detailed should have call tree')
+    assert.ok(adaptiveOutput.includes('Executive Summary'), 'Adaptive should have executive summary')
   })
 
-  test('formatSummary table is well-formed', async () => {
+  test('formatSummary table is well-formed markdown', async () => {
     const cpuProfile = join(profilesDir, 'cpu-test.pb.gz')
 
     if (!existsSync(cpuProfile)) {
@@ -108,14 +108,12 @@ describe('formatter', () => {
     const analysis = analyzeProfile(profile)
     const output = formatSummary(analysis, profileType)
 
-    // Check table structure
-    assert.ok(output.includes('┌'), 'Should have table top border')
-    assert.ok(output.includes('└'), 'Should have table bottom border')
-    assert.ok(output.includes('│'), 'Should have table columns')
-    assert.ok(output.includes('Rank'), 'Should have Rank header')
-    assert.ok(output.includes('Function'), 'Should have Function header')
-    assert.ok(output.includes('Self%'), 'Should have Self% header')
-    assert.ok(output.includes('Cum%'), 'Should have Cum% header')
+    // Check markdown table structure
+    assert.ok(output.includes('| Rank |'), 'Should have Rank column')
+    assert.ok(output.includes('| Function |'), 'Should have Function column')
+    assert.ok(output.includes('| Self% |'), 'Should have Self% column')
+    assert.ok(output.includes('| Cum% |'), 'Should have Cum% column')
+    assert.ok(output.includes('|---'), 'Should have table separator row')
   })
 
   test('output includes percentage signs', async () => {
@@ -133,6 +131,26 @@ describe('formatter', () => {
     for (const level of ['summary', 'detailed', 'adaptive'] as const) {
       const output = format(analysis, profileType, level)
       assert.ok(output.includes('%'), `${level} format should include percentages`)
+    }
+  })
+
+  test('output uses markdown formatting', async () => {
+    const cpuProfile = join(profilesDir, 'cpu-test.pb.gz')
+
+    if (!existsSync(cpuProfile)) {
+      console.log('Skipping: cpu-test.pb.gz not found.')
+      return
+    }
+
+    const profile = parseProfile(cpuProfile)
+    const profileType = detectProfileType(profile)
+    const analysis = analyzeProfile(profile)
+
+    for (const level of ['summary', 'detailed', 'adaptive'] as const) {
+      const output = format(analysis, profileType, level)
+      assert.ok(output.includes('**'), `${level} format should use bold markdown`)
+      assert.ok(output.includes('`'), `${level} format should use code markdown`)
+      assert.ok(output.startsWith('#'), `${level} format should start with heading`)
     }
   })
 })
