@@ -1,0 +1,15 @@
+{
+  "name": "quadratic-algo",
+  "type": "module",
+  "scripts": {
+    "start": "node server.ts",
+    "benchmark": "node benchmark.ts"
+  },
+  "dependencies": {
+    "@datadog/pprof": "^5.13.1",
+    "fastify": "^4.26.0"
+  },
+  "devDependencies": {
+    "autocannon": "^7.15.0"
+  }
+}
