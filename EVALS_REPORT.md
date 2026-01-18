@@ -2,7 +2,7 @@
 
 ## Overview
 
-This eval tested whether an LLM subagent could identify and fix performance bottlenecks using pprof-to-llm output. The outer agent (Claude) orchestrated the process: running benchmarks, collecting profiles, spawning optimization subagents, applying fixes, and measuring results.
+This eval tested whether an LLM subagent could identify and fix performance bottlenecks using pprof-to-md output. The outer agent (Claude) orchestrated the process: running benchmarks, collecting profiles, spawning optimization subagents, applying fixes, and measuring results.
 
 ## Results Summary
 
@@ -124,7 +124,7 @@ This eval tested whether an LLM subagent could identify and fix performance bott
    - Single-pass array processing
    - Using Set for O(1) lookups
 
-3. **pprof-to-llm format:** The adaptive format provided enough context for the LLM to understand call paths and identify hotspots.
+3. **pprof-to-md format:** The adaptive format provided enough context for the LLM to understand call paths and identify hotspots.
 
 ### What Needs Improvement
 

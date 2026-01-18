@@ -2,7 +2,7 @@
 
 ## Overview
 
-This eval tests whether an LLM can successfully identify and fix performance bottlenecks using pprof-to-llm output. The orchestration is performed by Claude (the outer agent), which spawns inner subagents to attempt optimizations.
+This eval tests whether an LLM can successfully identify and fix performance bottlenecks using pprof-to-md output. The orchestration is performed by Claude (the outer agent), which spawns inner subagents to attempt optimizations.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -12,7 +12,7 @@ This eval tests whether an LLM can successfully identify and fix performance bot
 │    1. Start app                                                 │
 │    2. Run baseline benchmark (autocannon)                       │
 │    3. Collect pprof profile during load                         │
-│    4. Convert profile → pprof-to-llm                            │
+│    4. Convert profile → pprof-to-md                            │
 │    5. ┌──────────────────────────────────────────┐              │
 │       │  Spawn Subagent (Task tool)              │              │
 │       │  - Receives: profile output + source     │              │

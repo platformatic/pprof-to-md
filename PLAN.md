@@ -1,4 +1,4 @@
-# pprof-to-llm: Design Plan
+# pprof-to-md: Design Plan
 
 A tool to convert pprof profiling data into an LLM-friendly textual format for performance analysis and bottleneck identification.
 
@@ -276,7 +276,7 @@ async function parseBody(req) {
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        pprof-to-llm                             │
+│                        pprof-to-md                             │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐   │
@@ -333,19 +333,19 @@ async function parseBody(req) {
 
 ```bash
 # Basic usage
-pprof-to-llm profile.pb.gz
+pprof-to-md profile.pb.gz
 
 # With format selection
-pprof-to-llm --format=detailed profile.pb.gz
+pprof-to-md --format=detailed profile.pb.gz
 
 # With source context
-pprof-to-llm --format=adaptive --source-dir=./src profile.pb.gz
+pprof-to-md --format=adaptive --source-dir=./src profile.pb.gz
 
 # Memory profile
-pprof-to-llm --type=heap heap.pb.gz
+pprof-to-md --type=heap heap.pb.gz
 
 # Output to file
-pprof-to-llm profile.pb.gz -o analysis.txt
+pprof-to-md profile.pb.gz -o analysis.txt
 ```
 
 ---
@@ -386,7 +386,7 @@ For each format × profile combination, evaluate:
 ```
 For each profile P in test_profiles:
     For each format F in [summary, detailed, adaptive]:
-        1. Generate output: pprof-to-llm --format=F P > output.txt
+        1. Generate output: pprof-to-md --format=F P > output.txt
         2. Count tokens: tokens = count_tokens(output.txt)
         3. Submit to LLM with standard prompt:
            "Analyze this profile and identify the main performance
@@ -437,7 +437,7 @@ What specific optimizations would you recommend?
 ## File Structure
 
 ```
-pprof-to-llm/
+pprof-to-md/
 ├── package.json
 ├── tsconfig.json
 ├── README.md

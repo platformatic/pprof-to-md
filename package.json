@@ -1,11 +1,11 @@
 {
-  "name": "pprof-to-llm",
+  "name": "pprof-to-md",
   "version": "1.0.0",
-  "description": "Convert pprof profiling data into LLM-friendly textual format for performance analysis",
+  "description": "Convert pprof profiling data into Markdown format for performance analysis",
   "type": "module",
   "main": "src/index.ts",
   "bin": {
-    "pprof-to-llm": "./src/cli.ts"
+    "pprof-to-md": "./src/cli.ts"
   },
   "scripts": {
     "test": "node --test test/*.test.ts",

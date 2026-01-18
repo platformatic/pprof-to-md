@@ -7,10 +7,10 @@ import { convert } from './index.ts'
 import type { FormatLevel, ProfileType } from './types.ts'
 
 const helpText = `
-pprof-to-llm - Convert pprof profiles to LLM-friendly text format
+pprof-to-md - Convert pprof profiles to LLM-friendly text format
 
 USAGE:
-  pprof-to-llm [options] <profile.pb[.gz]>
+  pprof-to-md [options] <profile.pb[.gz]>
 
 OPTIONS:
   -f, --format <level>    Output format: summary, detailed, adaptive (default: adaptive)
@@ -24,16 +24,16 @@ OPTIONS:
 
 EXAMPLES:
   # Basic usage - analyze a CPU profile
-  pprof-to-llm cpu-profile.pb.gz
+  pprof-to-md cpu-profile.pb.gz
 
   # Detailed output with source context
-  pprof-to-llm --format=detailed --source-dir=./src profile.pb.gz
+  pprof-to-md --format=detailed --source-dir=./src profile.pb.gz
 
   # Adaptive format for iterative analysis
-  pprof-to-llm --format=adaptive profile.pb -o analysis.txt
+  pprof-to-md --format=adaptive profile.pb -o analysis.txt
 
   # Memory profile analysis
-  pprof-to-llm --type=heap heap-profile.pb.gz
+  pprof-to-md --type=heap heap-profile.pb.gz
 
 FORMAT LEVELS:
   summary   - Compact table of hotspots and critical paths (best for quick triage)
@@ -65,7 +65,7 @@ function main(): void {
     const pkg = JSON.parse(
       readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
     )
-    console.log(`pprof-to-llm v${pkg.version}`)
+    console.log(`pprof-to-md v${pkg.version}`)
     process.exit(0)
   }
 
