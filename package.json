@@ -3,11 +3,26 @@
   "version": "1.0.0",
   "description": "Convert pprof profiling data into Markdown format for performance analysis",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "pprof-to-md": "./src/cli.ts"
+    "pprof-to-md": "dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
     "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "generate-profiles": "node test/generate-profiles.ts"
@@ -17,9 +32,14 @@
     "profiling",
     "performance",
     "llm",
+    "markdown",
     "analysis"
   ],
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/platformatic/pprof-to-md.git"
+  },
   "dependencies": {
     "pprof-format": "^2.1.0"
   },
@@ -29,6 +49,6 @@
     "typescript": "^5.7.0"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.6.0"
   }
 }

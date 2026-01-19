@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 # GitHuman
 .githuman/
 .claude/
+
+# Build output
+dist/

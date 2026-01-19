@@ -161,7 +161,7 @@ writeFileSync('heap.pb.gz', gzipSync(heapProfile.encode()))
 
 ## Requirements
 
-- Node.js >= 22.0.0 (uses native TypeScript support)
+- Node.js >= 22.6.0 (uses native TypeScript type stripping)
 
 ## License
 
