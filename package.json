@@ -1,6 +1,6 @@
 {
   "name": "pprof-to-md",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Convert pprof profiling data into Markdown format for performance analysis",
   "type": "module",
   "main": "dist/index.js",
